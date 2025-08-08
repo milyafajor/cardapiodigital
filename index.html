@@ -346,12 +346,52 @@
     calculateTotal();
   });
 
-  // Resumo do pedido
-  $('#viewSummary').addEventListener('click', ()=>{
-    renderSummary();
-    openSummary();
+    function isLojaAberta() {
+    const agora = new Date();
+    const hora = agora.getHours();
+    return hora >= horaAbertura && hora < horaFechamento;
+  }
+ // Função para verificar se a loja está aberta
+function isLojaAberta() {
+  const agora = new Date();
+  const hora = agora.getHours();
+  return hora >= horaAbertura && hora < horaFechamento;
+}
+
+// Monta o resumo do pedido
+function atualizarResumoPedido() {
+  let resumo = '';
+  let total = 0;
+
+  produtos.forEach(p => {
+    const q = state.quantities[p.id] || 0;
+    if (q > 0) {
+      const sub = q * p.price;
+      total += sub;
+      resumo += `<li>${p.name} — ${q} un. — R$ ${formatCurrency(sub)}</li>`;
+    }
   });
-  $('#closeSummary').addEventListener('click', closeSummary);
+
+  const discount = state.discountPercent || 0;
+  const discountValue = total * (discount / 100);
+  const finalTotal = total - discountValue;
+
+  resumo += `<li><strong>Total: R$ ${formatCurrency(finalTotal)}</strong></li>`;
+
+  if (state.appliedCoupon) {
+    resumo += `<li>Cupom: ${state.appliedCoupon} (${discount}%)</li>`;
+  }
+
+  // Mostra ou esconde botão conforme horário
+  if (isLojaAberta()) {
+    resumo += `<button id="btnEnviarPedido" class="btn-enviar">📲 Enviar Pedido</button>`;
+  } else {
+    resumo += `<p class="fechado">⛔ Estamos fechados no momento. Horário: ${horaAbertura}h às ${horaFechamento}h</p>`;
+  }
+
+  document.querySelector('#resumoPedido').innerHTML = resumo;
+}
+
 
   function renderSummary(){
     const listEl = $('#summaryList');
