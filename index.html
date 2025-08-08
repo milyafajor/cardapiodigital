@@ -48,7 +48,69 @@
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
     }
+  /* Estilos para os botões de ação secundária */
+  .btn-secondary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 10px 15px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
 
+  .btn-secondary:hover {
+    background: rgba(107, 68, 35, 0.08);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Estilo específico para o botão Aplicar */
+  .btn-apply {
+    background: var(--accent);
+    color: var(--primary-dark);
+    border: 1px solid var(--accent);
+    font-weight: 600;
+  }
+
+  .btn-apply:hover {
+    background: rgba(212, 167, 106, 0.9);
+    color: var(--white);
+  }
+
+  /* Container dos botões de filtro */
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Efeito de loading */
+  .btn-loading .btn-icon {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -752,17 +814,23 @@
       <section class="products-section">
         <h2 class="section-title">Nossos Sabores</h2>
 
-        <div class="filter-row">
-          <input type="text" id="filterName" placeholder="Filtrar por nome..." />
-          <select id="filterPrice">
-            <option value="all">Ordenar por preço</option>
-            <option value="low">Menor preço</option>
-            <option value="high">Maior preço</option>
-          </select>
-          <button class="btn-secondary" id="resetFilters">
-            <i class="fas fa-redo btn-icon"></i> Redefinir
-          </button>
-        </div>
+       <div class="filter-row">
+  <input type="text" id="filterName" placeholder="Buscar sabor..." />
+  <select id="filterPrice">
+    <option value="all">Todos os preços</option>
+    <option value="low">Menor preço</option>
+    <option value="high">Maior preço</option>
+  </select>
+  
+  <div class="filter-actions">
+    <button type="button" id="resetFilters" class="btn-secondary">
+      <i class="fas fa-sync-alt btn-icon"></i> Redefinir
+    </button>
+    <button type="button" id="applyFilter" class="btn-secondary btn-apply">
+      <i class="fas fa-check btn-icon"></i> Aplicar
+    </button>
+  </div>
+</div>
 
         <ul class="product-list" id="productList">
           <li class="notice">
@@ -992,7 +1060,43 @@
       
       // Inicializa quantidades
       config.produtos.forEach(p => state.quantities[p.id] = 0);
+        // Adiciona efeito de loading temporário nos botões
+  document.getElementById('resetFilters').addEventListener('click', function() {
+    const btn = this;
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+    
+    // Simula processamento
+    setTimeout(() => {
+      resetFilters();
+      btn.classList.remove('btn-loading');
+      btn.disabled = false;
       
+      // Feedback visual
+      btn.innerHTML = '<i class="fas fa-check btn-icon"></i> Redefinido!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-sync-alt btn-icon"></i> Redefinir';
+      }, 1500);
+    }, 800);
+  });
+
+  document.getElementById('applyFilter').addEventListener('click', function() {
+    const btn = this;
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+    
+    setTimeout(() => {
+      filterProducts();
+      btn.classList.remove('btn-loading');
+      btn.disabled = false;
+      
+      // Feedback visual
+      btn.innerHTML = '<i class="fas fa-check btn-icon"></i> Aplicado!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check btn-icon"></i> Aplicar';
+      }, 1500);
+    }, 800);
+  });
       // Renderiza produtos
       await renderProducts();
       state.loading = false;
