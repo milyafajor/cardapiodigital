@@ -1,125 +1,41 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mily Alfajor - Cardápio Digital</title>
-  <meta name="description" content="Cardápio digital da Mily Alfajor - Alfajores artesanais" />
-  <link rel="stylesheet" href="style.css">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mily Alfajor - Pedido</title>
+  
 </head>
 <body>
-  <header class="container">
-    <img class="logo" src="LOGOMARCA.png" alt="Mily Alfajor - logo (substitua)" />
-    <h1>Mily Alfajor</h1>
-    <div class="subtitle">Alfajores artesanais feitos com amor</div>
+  <header>
+    Mily Alfajor
   </header>
 
-  <main class="container">
-    <div class="order-container">
-      <section class="products-section" aria-labelledby="produtos-title">
-        <h2 id="produtos-title" class="section-title">Nossos Sabores</h2>
+  <main>
+    <div id="closedNotice"></div>
 
-        <div class="filter-row">
-          <input type="text" id="filterName" placeholder="Filtrar por nome..." />
-          <select id="filterPrice">
-            <option value="all">Ordenar por preço</option>
-            <option value="low">Menor preço</option>
-            <option value="high">Maior preço</option>
-          </select>
-          <button class="btn secondary" id="resetFilters">Redefinir</button>
-        </div>
+    <ul id="productList"></ul>
 
-        <ul class="product-list" id="productList">
-          <!-- Produtos preenchidos via JS -->
-          <li class="small">Carregando produtos...</li>
-        </ul>
+    <h2>Resumo do Pedido</h2>
+    <ul id="resumoPedido"></ul>
 
-      </section>
+    <h2>Dados do Cliente</h2>
+    <label>Nome:<br><input type="text" id="nome"></label><br><br>
+    <label>Telefone:<br><input type="text" id="telefone"></label><br><br>
+    <label>Endereço:<br><input type="text" id="endereco"></label><br><br>
 
-      <section class="form-section" aria-labelledby="pedido-title">
-        <h2 id="pedido-title" class="section-title">Seu Pedido</h2>
+    <h3>Forma de Pagamento</h3>
+    <label><input type="radio" name="pagamento" value="Dinheiro" checked> Dinheiro</label><br>
+    <label><input type="radio" name="pagamento" value="Pix"> Pix</label><br>
+    <label><input type="radio" name="pagamento" value="Cartão"> Cartão</label><br><br>
 
-        <form id="pedidoForm">
-          <div class="form-group">
-            <label for="nome">Nome completo</label>
-            <input type="text" id="nome" required placeholder="Digite seu nome" />
-          </div>
-
-          <div class="form-group">
-            <label for="telefone">Telefone</label>
-            <input type="tel" id="telefone" required placeholder="(XX) XXXXX-XXXX" />
-          </div>
-
-          <div class="form-group">
-            <label for="endereco">Endereço completo</label>
-            <textarea id="endereco" rows="2" required placeholder="Rua, número, bairro, complemento"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Forma de pagamento</label>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <label><input type="radio" name="pagamento" value="Pix" checked /> Pix</label>
-              <label><input type="radio" name="pagamento" value="Dinheiro" /> Dinheiro</label>
-              <label><input type="radio" name="pagamento" value="Cartão" /> Cartão</label>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="observacoes">Observações</label>
-            <textarea id="observacoes" rows="2" placeholder="Alguma observação sobre seu pedido?"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="coupon">Cupom de desconto</label>
-            <div class="coupon-row">
-              <input type="text" id="coupon" placeholder="Insira o cupom (ex: CUPOM10)" />
-              <button type="button" class="btn secondary" id="applyCoupon">Aplicar</button>
-            </div>
-            <div id="couponMsg" class="small" style="margin-top:6px"></div>
-          </div>
-
-          <div class="total-section">
-            <div class="total-label">Total do pedido</div>
-            <div class="total-value">R$ <span id="total">0,00</span></div>
-          </div>
-
-          <div id="shopNotice" class="notice" style="display:none"></div>
-          <div id="closedNotice" class="out-of-hours" style="display:none"></div>
-
-          <div style="margin-top:12px;display:flex;gap:10px">
-            <button type="button" id="viewSummary" class="btn">Ver resumo</button>
-            <button type="submit" id="sendOrder" class="btn">Enviar pedido</button>
-          </div>
-        </form>
-      </section>
-    </div>
+    <label>Observações:<br><textarea id="observacoes"></textarea></label>
   </main>
 
-  <footer class="container">
-    <p>Mily Alfajor &copy; <span id="currentYear"></span> - Todos os direitos reservados</p>
-  </footer>
-
-  <!-- Modal resumo -->
-  <div id="summaryModal" class="summary-modal" role="dialog" aria-hidden="true">
-    <div class="summary-card" role="document">
-      <h3>Resumo do pedido</h3>
-      <div id="summaryContent">
-        <div class="summary-list" id="summaryList"></div>
-        <div class="small" id="summaryTotals" style="margin-top:8px"></div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-        <button id="closeSummary" class="btn secondary">Voltar</button>
-        <button id="confirmSend" class="btn">Confirmar e enviar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-  // ===== CONFIGURAÇÕES =====
-const horaAbertura = 9; // 09:00
-const horaFechamento = 3; // 03:00 (passa da meia-noite)
+<script>
+// ===== CONFIGURAÇÕES =====
+const horaAbertura = 9;
+const horaFechamento = 3;
 const whatsappNumber = '5524992438194';
 
 // ===== ESTOQUE =====
@@ -157,8 +73,6 @@ const pad = n => String(n).padStart(2, '0');
 const state = { quantities: {}, appliedCoupon: null, discountPercent: 0 };
 
 // ===== FUNÇÕES =====
-
-// Verifica se loja está aberta
 function isLojaAberta() {
   const agora = new Date();
   const hora = agora.getHours();
@@ -167,11 +81,9 @@ function isLojaAberta() {
     : (hora >= horaAbertura || hora < horaFechamento);
 }
 
-// Atualiza status e botões
 function checkOpenStatus() {
   const open = isLojaAberta();
   const closedNotice = $('#closedNotice');
-
   if (!open) {
     closedNotice.style.display = 'block';
     closedNotice.textContent = `⛔ Estamos fechados. Horário: ${pad(horaAbertura)}h às ${pad(horaFechamento)}h`;
@@ -182,7 +94,6 @@ function checkOpenStatus() {
   }
 }
 
-// Renderiza lista de produtos
 function renderProducts(list) {
   const el = $('#productList');
   el.innerHTML = '';
@@ -190,35 +101,21 @@ function renderProducts(list) {
     const li = document.createElement('li');
     li.className = 'product-item';
     li.innerHTML = `
-      <img class="product-thumb" src="${prod.img}" alt="${prod.name}" onerror="this.style.opacity=.6;this.style.background='#eee'"/>
+      <img class="product-thumb" src="${prod.img}" alt="${prod.name}" />
       <div class="product-info">
         <div class="product-name">${prod.name}</div>
-        <div class="product-desc">${prod.desc}</div>
+        <div>${prod.desc}</div>
       </div>
       <div class="product-controls">
         <div class="product-price">R$ ${formatCurrency(prod.price)}</div>
         <input type="number" min="0" value="0" class="product-quantity" data-id="${prod.id}" data-price="${prod.price}" />
-        <div class="small stock-info" data-id="${prod.id}"></div>
       </div>
     `;
     el.appendChild(li);
   });
   attachQuantityListeners();
-  updateStockDisplayAll();
 }
 
-// Estoque
-function updateStockDisplayAll(){
-  $$('.stock-info').forEach(el => {
-    const id = el.dataset.id;
-    const s = estoque[id];
-    el.textContent = s === null ? 'Estoque: Ilimitado' : (s === 0 ? 'Esgotado' : `Estoque: ${s} un.`);
-    const input = document.querySelector(`.product-quantity[data-id="${id}"]`);
-    if (s === 0 && input) { input.disabled = true; input.value = 0; state.quantities[id] = 0; }
-  });
-}
-
-// Eventos de quantidade
 function attachQuantityListeners(){
   $$('.product-quantity').forEach(inp => {
     inp.addEventListener('input', onQtyChange);
@@ -237,28 +134,12 @@ function onQtyChange(e){
     alert(`Só temos ${s} unidade(s) de ${id}.`);
   }
   state.quantities[id] = q;
-  calculateTotal();
+  atualizarResumoPedido();
 }
 
-// Total
-function calculateTotal(){
-  let total = 0;
-  produtos.forEach(p => {
-    const q = state.quantities[p.id] || 0;
-    total += q * p.price;
-  });
-  const discount = state.discountPercent || 0;
-  const discountValue = total * (discount/100);
-  const finalTotal = total - discountValue;
-  $('#total').textContent = formatCurrency(finalTotal);
-  checkOpenStatus();
-}
-
-// Resumo do pedido
 function atualizarResumoPedido() {
   let resumo = '';
   let total = 0;
-
   produtos.forEach(p => {
     const q = state.quantities[p.id] || 0;
     if (q > 0) {
@@ -267,24 +148,20 @@ function atualizarResumoPedido() {
       resumo += `<li>${p.name} — ${q} un. — R$ ${formatCurrency(sub)}</li>`;
     }
   });
-
   const discount = state.discountPercent || 0;
   const discountValue = total * (discount / 100);
   const finalTotal = total - discountValue;
-
   resumo += `<li><strong>Total: R$ ${formatCurrency(finalTotal)}</strong></li>`;
-  if (state.appliedCoupon) resumo += `<li>Cupom: ${state.appliedCoupon} (${discount}%)</li>`;
 
   if (isLojaAberta()) {
     resumo += `<button class="btn-enviar" onclick="enviarPedido()">📲 Enviar Pedido</button>`;
   } else {
     resumo += `<p class="fechado">⛔ Estamos fechados no momento. Horário: ${horaAbertura}h às ${horaFechamento}h</p>`;
   }
-
   $('#resumoPedido').innerHTML = resumo;
+  checkOpenStatus();
 }
 
-// Envia para WhatsApp
 function enviarPedido(){
   const nome = $('#nome').value.trim();
   const telefone = $('#telefone').value.trim();
@@ -329,17 +206,12 @@ function enviarPedido(){
   window.open(url, '_blank');
 }
 
-// Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('currentYear').textContent = new Date().getFullYear();
   renderProducts(produtos);
   produtos.forEach(p => state.quantities[p.id] = 0);
-  calculateTotal();
-  checkOpenStatus();
+  atualizarResumoPedido();
 });
-
-
-
-  </script>
+</script>
 </body>
 </html>
+
