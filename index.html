@@ -117,12 +117,12 @@
   </div>
 
   <script>
-// ====== CONFIGURAÇÕES ======
+// ===== CONFIGURAÇÕES =====
 const horaAbertura = 9; // 09:00
-const horaFechamento = 5; // 03:00 (passa da meia-noite)
+const horaFechamento = 3; // 03:00 (passa da meia-noite)
 const whatsappNumber = '5524992438194';
 
-// ====== ESTOQUE ======
+// ===== ESTOQUE =====
 const estoque = {
   'Brigadeiro': null,
   'Beijinho': null,
@@ -133,7 +133,7 @@ const estoque = {
   'Kit Kat': 0
 };
 
-// ====== PRODUTOS ======
+// ===== PRODUTOS =====
 const produtos = [
   { id: 'Brigadeiro', name: 'Brigadeiro', price: 8.00, desc: 'Delicioso brigadeiro cremoso', img: 'fotos/BRIGADEIRO.png' },
   { id: 'Beijinho', name: 'Beijinho', price: 8.00, desc: 'Tradicional beijinho com coco', img: 'fotos/BEIJINHO.png' },
@@ -144,21 +144,21 @@ const produtos = [
   { id: 'Kit Kat', name: 'Kit Kat', price: 0.00, desc: 'Kit Kat crocante', img: 'LOGOMARCA.png' }
 ];
 
-// ====== CUPONS ======
+// ===== CUPONS =====
 const cupons = { 'CUPOM10': 10 };
 
-// ====== UTILITÁRIOS ======
+// ===== UTILITÁRIOS =====
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const formatCurrency = v => v.toFixed(2).replace('.', ',');
 const pad = n => String(n).padStart(2, '0');
 
-// ====== ESTADO ======
+// ===== ESTADO =====
 const state = { quantities: {}, appliedCoupon: null, discountPercent: 0 };
 
-// ====== FUNÇÕES ======
+// ===== FUNÇÕES =====
 
-// Verifica se a loja está aberta
+// Verifica se loja está aberta
 function isLojaAberta() {
   const agora = new Date();
   const hora = agora.getHours();
@@ -167,25 +167,22 @@ function isLojaAberta() {
     : (hora >= horaAbertura || hora < horaFechamento);
 }
 
-// Atualiza status da loja e botão principal
+// Atualiza status e botões
 function checkOpenStatus() {
   const open = isLojaAberta();
   const closedNotice = $('#closedNotice');
-  const sendBtn = $('#sendOrder');
 
   if (!open) {
     closedNotice.style.display = 'block';
     closedNotice.textContent = `Estamos fechados. Horário: ${pad(horaAbertura)}h às ${pad(horaFechamento)}h`;
-    sendBtn.disabled = true;
-    sendBtn.style.opacity = '0.6';
+    $$('.btn-enviar').forEach(btn => btn.style.display = 'none');
   } else {
     closedNotice.style.display = 'none';
-    sendBtn.disabled = false;
-    sendBtn.style.opacity = '1';
+    $$('.btn-enviar').forEach(btn => btn.style.display = 'inline-block');
   }
 }
 
-// Renderiza produtos
+// Renderiza lista de produtos
 function renderProducts(list) {
   const el = $('#productList');
   el.innerHTML = '';
@@ -210,7 +207,7 @@ function renderProducts(list) {
   updateStockDisplayAll();
 }
 
-// Atualiza exibição do estoque
+// Estoque
 function updateStockDisplayAll(){
   $$('.stock-info').forEach(el => {
     const id = el.dataset.id;
@@ -243,7 +240,7 @@ function onQtyChange(e){
   calculateTotal();
 }
 
-// Calcula total
+// Total
 function calculateTotal(){
   let total = 0;
   produtos.forEach(p => {
@@ -254,14 +251,10 @@ function calculateTotal(){
   const discountValue = total * (discount/100);
   const finalTotal = total - discountValue;
   $('#total').textContent = formatCurrency(finalTotal);
-
-  if ($('#summaryModal').style.display === 'flex'){
-    atualizarResumoPedido();
-  }
   checkOpenStatus();
 }
 
-// Atualiza resumo do pedido
+// Resumo do pedido
 function atualizarResumoPedido() {
   let resumo = '';
   let total = 0;
@@ -283,7 +276,7 @@ function atualizarResumoPedido() {
   if (state.appliedCoupon) resumo += `<li>Cupom: ${state.appliedCoupon} (${discount}%)</li>`;
 
   if (isLojaAberta()) {
-    resumo += `<button id="btnEnviarPedido" class="btn-enviar" onclick="enviarPedido()">📲 Enviar Pedido</button>`;
+    resumo += `<button class="btn-enviar" onclick="enviarPedido()">📲 Enviar Pedido</button>`;
   } else {
     resumo += `<p class="fechado">⛔ Estamos fechados no momento. Horário: ${horaAbertura}h às ${horaFechamento}h</p>`;
   }
@@ -291,7 +284,7 @@ function atualizarResumoPedido() {
   $('#resumoPedido').innerHTML = resumo;
 }
 
-// Envia o pedido para o WhatsApp com formatação bonita
+// Envia para WhatsApp
 function enviarPedido(){
   const nome = $('#nome').value.trim();
   const telefone = $('#telefone').value.trim();
@@ -329,7 +322,6 @@ function enviarPedido(){
   if (state.appliedCoupon) {
     message += `*🏷 CUPOM:* ${state.appliedCoupon} (${discount}%)\n`;
   }
-
   message += `\n✅ *Obrigado por comprar com a Mily Alfajor!*`;
 
   const encoded = encodeURIComponent(message);
