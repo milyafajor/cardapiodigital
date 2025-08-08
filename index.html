@@ -436,7 +436,7 @@
     message += `*Endereço:* ${endereco}\n`;
     message += `*Pagamento:* ${pagamento}\n`;
     if (observacoes) message += `*Observações:* ${observacoes}\n`;
-    message += `*ITENS DO PEDIDO:*`;
+    message += `\n*ITENS DO PEDIDO:*\n`;
     let total = 0;
     produtos.forEach(p => {
       const q = state.quantities[p.id] || 0;
@@ -449,8 +449,8 @@
     const discount = state.discountPercent || 0;
     const discountValue = total * (discount/100);
     const finalTotal = total - discountValue;
-    message += `*TOTAL:* R$ ${formatCurrency(finalTotal)}`;
-    if (state.appliedCoupon) message += `*CUPOM:* ${state.appliedCoupon} (${discount}%)`;
+    message += `\n*TOTAL:* R$ ${formatCurrency(finalTotal)}`;
+    if (state.appliedCoupon) message += `\n*CUPOM:* ${state.appliedCoupon} (${discount}%)`;
     const encoded = encodeURIComponent(message);
     const url = `https://wa.me/${whatsappNumber}?text=${encoded}`;
     // Update stock if limited
