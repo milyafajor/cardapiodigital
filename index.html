@@ -1044,16 +1044,7 @@
       const el = $('#productList');
       el.innerHTML = '';
       
-      // Simula carregamento
-      if (state.loading) {
-        el.innerHTML = `
-          <li class="notice">
-            <i class="fas fa-spinner fa-pulse notice-icon"></i>
-            <div>Carregando nossos deliciosos alfajores...</div>
-          </li>
-        `;
-        await sleep(800);
-      }
+   
       
       // Verifica se há produtos
       if (config.produtos.length === 0) {
