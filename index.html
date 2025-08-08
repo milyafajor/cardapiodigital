@@ -431,15 +431,12 @@
     const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
     const observacoes = $('#observacoes').value.trim();
     let message = `*NOVO PEDIDO - MILY ALFAJOR*\n\n`;
-      message += `*Cliente:* ${nome}\n`;
-        message += `*Telefone:* ${telefone}\n`;
-        message += `*Endereço:* ${endereco}\n`;
-        message += `*Pagamento:* ${pagamento}\n`;
-        if (observacoes) {
-          message += `*Observações:* ${observacoes}\n`;
-          }
-     message += `\n*ITENS DO PEDIDO*\n${productsList}\n`;
-     message += `\n*TOTAL: R$ ${total}*`;
+    message += `*Cliente:* ${nome}\n`;
+    message += `*Telefone:* ${telefone}\n`;
+    message += `*Endereço:* ${endereco}\n`;
+    message += `*Pagamento:* ${pagamento}\n`;
+    if (observacoes) message += `*Observações:* ${observacoes}\n`;
+    message += `*ITENS DO PEDIDO:*\n`;
     let total = 0;
     produtos.forEach(p => {
       const q = state.quantities[p.id] || 0;
