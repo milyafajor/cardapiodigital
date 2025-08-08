@@ -424,35 +424,51 @@
 
   // Confirm send from modal
   $('#confirmSend').addEventListener('click', ()=>{
-    // Build message and open WhatsApp
-    const nome = $('#nome').value.trim();
-    const telefone = $('#telefone').value.trim();
-    const endereco = $('#endereco').value.trim();
-    const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
-    const observacoes = $('#observacoes').value.trim();
-    let message = `*NOVO PEDIDO - MILY ALFAJOR*\n\n`;
-    message += `*Cliente:* ${nome}\n`;
-    message += `*Telefone:* ${telefone}\n`;
-    message += `*Endereço:* ${endereco}\n`;
-    message += `*Pagamento:* ${pagamento}\n`;
-    if (observacoes) message += `*Observações:* ${observacoes}\n`;
-    message += `\n*ITENS DO PEDIDO:*\n`;
-    let total = 0;
-    produtos.forEach(p => {
-      const q = state.quantities[p.id] || 0;
-      if (q > 0){
-        const sub = q * p.price;
-        total += sub;
-        message += `- ${p.name}: ${q} un. - R$ ${formatCurrency(sub)}`;
-      }
-    });
-    const discount = state.discountPercent || 0;
-    const discountValue = total * (discount/100);
-    const finalTotal = total - discountValue;
-    message += `\n*TOTAL:* R$ ${formatCurrency(finalTotal)}`;
-    if (state.appliedCoupon) message += `\n*CUPOM:* ${state.appliedCoupon} (${discount}%)`;
-    const encoded = encodeURIComponent(message);
-    const url = `https://wa.me/${whatsappNumber}?text=${encoded}`;
+  // Monta a mensagem com formatação bonita
+const nome = $('#nome').value.trim();
+const telefone = $('#telefone').value.trim();
+const endereco = $('#endereco').value.trim();
+const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
+const observacoes = $('#observacoes').value.trim();
+
+let message = `*📦 NOVO PEDIDO - MILY ALFAJOR*\n`;
+message += `────────────────────\n`;
+message += `*👤 Cliente:* ${nome}\n`;
+message += `*📞 Telefone:* ${telefone}\n`;
+message += `*📍 Endereço:* ${endereco}\n`;
+message += `*💳 Pagamento:* ${pagamento}\n`;
+if (observacoes) message += `*📝 Observações:* ${observacoes}\n`;
+
+message += `\n*🛒 ITENS DO PEDIDO:*\n`;
+message += `────────────────────\n`;
+
+let total = 0;
+produtos.forEach(p => {
+  const q = state.quantities[p.id] || 0;
+  if (q > 0){
+    const sub = q * p.price;
+    total += sub;
+    message += `• ${p.name} — ${q} un. — R$ ${formatCurrency(sub)}\n`;
+  }
+});
+
+const discount = state.discountPercent || 0;
+const discountValue = total * (discount/100);
+const finalTotal = total - discountValue;
+
+message += `────────────────────\n`;
+message += `*💰 TOTAL:* R$ ${formatCurrency(finalTotal)}\n`;
+if (state.appliedCoupon) {
+  message += `*🏷 CUPOM:* ${state.appliedCoupon} (${discount}%)\n`;
+}
+
+message += `\n✅ *Obrigado por comprar com a Mily Alfajor!*`;
+
+// Envia para o WhatsApp
+const encoded = encodeURIComponent(message);
+const url = `https://wa.me/${whatsappNumber}?text=${encoded}`;
+window.open(url, '_blank');
+
     // Update stock if limited
     for (const p of produtos){
       const s = estoque[p.id];
