@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mily Alfajor - Cardápio Digital</title>
+  <meta name="description" content="Cardápio digital da Mily Alfajor - Alfajores artesanais" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <header class="container">
+    <img class="logo" src="LOGOMARCA.png" alt="Mily Alfajor - logo (substitua)" />
+    <h1>Mily Alfajor</h1>
+    <div class="subtitle">Alfajores artesanais feitos com amor</div>
+  </header>
+
+  <main class="container">
+    <div class="order-container">
+      <section class="products-section" aria-labelledby="produtos-title">
+        <h2 id="produtos-title" class="section-title">Nossos Sabores</h2>
+
+        <div class="filter-row">
+          <input type="text" id="filterName" placeholder="Filtrar por nome..." />
+          <select id="filterPrice">
+            <option value="all">Ordenar por preço</option>
+            <option value="low">Menor preço</option>
+            <option value="high">Maior preço</option>
+          </select>
+          <button class="btn secondary" id="resetFilters">Redefinir</button>
+        </div>
+
+        <ul class="product-list" id="productList">
+          <!-- Produtos preenchidos via JS -->
+          <li class="small">Carregando produtos...</li>
+        </ul>
+
+      </section>
+
+      <section class="form-section" aria-labelledby="pedido-title">
+        <h2 id="pedido-title" class="section-title">Seu Pedido</h2>
+
+        <form id="pedidoForm">
+          <div class="form-group">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" required placeholder="Digite seu nome" />
+          </div>
+
+          <div class="form-group">
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" required placeholder="(XX) XXXXX-XXXX" />
+          </div>
+
+          <div class="form-group">
+            <label for="endereco">Endereço completo</label>
+            <textarea id="endereco" rows="2" required placeholder="Rua, número, bairro, complemento"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Forma de pagamento</label>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <label><input type="radio" name="pagamento" value="Pix" checked /> Pix</label>
+              <label><input type="radio" name="pagamento" value="Dinheiro" /> Dinheiro</label>
+              <label><input type="radio" name="pagamento" value="Cartão" /> Cartão</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="observacoes">Observações</label>
+            <textarea id="observacoes" rows="2" placeholder="Alguma observação sobre seu pedido?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="coupon">Cupom de desconto</label>
+            <div class="coupon-row">
+              <input type="text" id="coupon" placeholder="Insira o cupom (ex: CUPOM10)" />
+              <button type="button" class="btn secondary" id="applyCoupon">Aplicar</button>
+            </div>
+            <div id="couponMsg" class="small" style="margin-top:6px"></div>
+          </div>
+
+          <div class="total-section">
+            <div class="total-label">Total do pedido</div>
+            <div class="total-value">R$ <span id="total">0,00</span></div>
+          </div>
+
+          <div id="shopNotice" class="notice" style="display:none"></div>
+          <div id="closedNotice" class="out-of-hours" style="display:none"></div>
+
+          <div style="margin-top:12px;display:flex;gap:10px">
+            <button type="button" id="viewSummary" class="btn">Ver resumo</button>
+            <button type="submit" id="sendOrder" class="btn">Enviar pedido</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container">
+    <p>Mily Alfajor &copy; <span id="currentYear"></span> - Todos os direitos reservados</p>
+  </footer>
+
+  <!-- Modal resumo -->
+  <div id="summaryModal" class="summary-modal" role="dialog" aria-hidden="true">
+    <div class="summary-card" role="document">
+      <h3>Resumo do pedido</h3>
+      <div id="summaryContent">
+        <div class="summary-list" id="summaryList"></div>
+        <div class="small" id="summaryTotals" style="margin-top:8px"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button id="closeSummary" class="btn secondary">Voltar</button>
+        <button id="confirmSend" class="btn">Confirmar e enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ====== CONFIGURAÇÕES ======
+  // Horário de funcionamento (24h)
+  const horaAbertura = 9; // 09:00
+  const horaFechamento = 22; // 22:00
+  // WhatsApp número (formato internacional sem +, ex: 55dddnúm)
+  const whatsappNumber = '5524992438194';
+
+  // Estoque: null = ilimitado. Quando você quiser limitar, substitua null pelo número disponível.
+  const estoque = {
+    'Brigadeiro': null,
+    'Beijinho': null,
+    'Doce de Leite': null,
+    'Creme de Avelã': null,
+    'Pistache': null,
+    'Oreo': 0,
+    'Kit Kat': 0
+  };
+
+  // Produtos catalogados (id deve bater com estoque keys)
+  const produtos = [
+    { id: 'Brigadeiro', name: 'Brigadeiro', price: 8.00, desc: 'Delicioso brigadeiro cremoso', img: 'fotos/BRIGADEIRO.png' },
+    { id: 'Beijinho', name: 'Beijinho', price: 8.00, desc: 'Tradicional beijinho com coco', img: 'fotos/BEIJINHO.png' },
+    { id: 'Doce de Leite', name: 'Doce de Leite', price: 9.00, desc: 'Doce de leite caseiro', img: 'fotos/DOCE DE LEITE 2.png' },
+    { id: 'Creme de Avelã', name: 'Creme de Avelã', price: 9.00, desc: 'Creme de avelã premium', img: 'fotos/DOCE DE LEITE 1.png' },
+    { id: 'Pistache', name: 'Pistache', price: 9.00, desc: 'Pistache com toque especial', img: 'fotos/PISTACHE.png' },
+    { id: 'Oreo', name: 'Oreo', price: 9.00, desc: 'Oreo recheado', img: 'LOGOMARCA.png' },
+    { id: 'Kit Kat', name: 'Kit Kat', price: 9.00, desc: 'Kit Kat crocante', img: 'LOGOMARCA.png' }
+  ];
+
+  // Cupons - reflect percentual de desconto (10 = 10%)
+  const cupons = {
+    'CUPOM10': 10
+  };
+
+  // ====== UTILITÁRIOS ======
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const formatCurrency = v => v.toFixed(2).replace('.', ',');
+
+  // Estado
+  const state = {
+    quantities: {}, // id -> quantidade selecionada
+    appliedCoupon: null,
+    discountPercent: 0
+  };
+
+  // Inicialização
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    renderProducts(produtos);
+    restoreInputs();
+    setupFilters();
+    calculateTotal();
+    checkOpenStatus();
+    setupPhoneMask();
+    setupEventListeners();
+  });
+
+  // Renderiza produtos na lista
+  function renderProducts(list) {
+    const el = $('#productList');
+    el.innerHTML = '';
+    list.forEach(prod => {
+      const li = document.createElement('li');
+      li.className = 'product-item';
+      li.innerHTML = `
+        <img class="product-thumb" src="${prod.img}" alt="${prod.name} - foto (substitua)" onerror="this.style.opacity=.6;this.style.background='#eee'"/>
+        <div class="product-info">
+          <div class="product-name">${prod.name}</div>
+          <div class="product-desc">${prod.desc}</div>
+        </div>
+        <div class="product-controls">
+          <div class="product-price">R$ ${formatCurrency(prod.price)}</div>
+          <input type="number" min="0" value="0" class="product-quantity" data-id="${prod.id}" data-price="${prod.price}" aria-label="Quantidade de ${prod.name}" />
+          <div class="small stock-info" data-id="${prod.id}"></div>
+        </div>
+      `;
+      el.appendChild(li);
+    });
+    attachQuantityListeners();
+    updateStockDisplayAll();
+  }
+
+  // Atualiza exibição de estoque (mostra 'Ilimitado' ou número restante)
+  function updateStockDisplayAll(){
+    $$('.stock-info').forEach(el => {
+      const id = el.dataset.id;
+      const s = estoque[id];
+      el.textContent = s === null ? 'Estoque: Ilimitado' : (s === 0 ? 'Esgotado' : `Estoque: ${s} un.`);
+      const input = document.querySelector(`.product-quantity[data-id="${id}"]`);
+      if (s === 0 && input) { input.disabled = true; input.value = 0; state.quantities[id] = 0; }
+    });
+  }
+
+  // Anexa ouvintes aos inputs de quantidade
+  function attachQuantityListeners(){
+    $$('.product-quantity').forEach(inp => {
+      inp.addEventListener('input', onQtyChange);
+      inp.addEventListener('change', onQtyChange);
+    });
+  }
+
+  function onQtyChange(e){
+    const inp = e.target;
+    const id = inp.dataset.id;
+    let q = parseInt(inp.value) || 0;
+    const s = estoque[id];
+    if (s !== null && s !== undefined && q > s){
+      q = s;
+      inp.value = q;
+      alert(`Quantidade ajustada: só temos ${s} unidade(s) de ${id}.`);
+    }
+    state.quantities[id] = q;
+    calculateTotal();
+  }
+
+  // Restaura inputs caso queira manter dados (não persistimos além do reload)
+  function restoreInputs(){
+    produtos.forEach(p => state.quantities[p.id] = 0);
+  }
+
+  // Calcula total e mostra na UI
+  function calculateTotal(){
+    let total = 0;
+    produtos.forEach(p => {
+      const q = state.quantities[p.id] || 0;
+      total += q * p.price;
+    });
+    const discount = state.discountPercent || 0;
+    const discountValue = total * (discount/100);
+    const finalTotal = total - discountValue;
+    $('#total').textContent = formatCurrency(finalTotal);
+    if ($('#summaryModal').style.display === 'flex'){
+      renderSummary();
+    }
+    checkOpenStatus();
+  }
+
+  // Verifica horário de funcionamento e habilita/desabilita botões
+  function checkOpenStatus(){
+    const now = new Date();
+    const hour = now.getHours();
+    const open = (horaAbertura <= horaFechamento)
+      ? (hour >= horaAbertura && hour < horaFechamento)
+      : (hour >= horaAbertura || hour < horaFechamento); // caso ultrapasse meia-noite
+    const closedNotice = $('#closedNotice');
+    const shopNotice = $('#shopNotice');
+    const sendBtn = $('#sendOrder');
+    if (!open){
+      closedNotice.style.display = 'block';
+      closedNotice.textContent = `Estamos fechados. Horário de funcionamento: ${pad(horaAbertura)}h às ${pad(horaFechamento)}h`;
+      sendBtn.disabled = true;
+      sendBtn.style.opacity = '0.6';
+    } else {
+      closedNotice.style.display = 'none';
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = '1';
+    }
+    // Show stock warnings if any product has quantity > stock
+    let stockProblem = false;
+    produtos.forEach(p => {
+      const s = estoque[p.id];
+      const q = state.quantities[p.id] || 0;
+      if (s !== null && q > s) stockProblem = true;
+    });
+    if (stockProblem){
+      shopNotice.style.display = 'block';
+      shopNotice.textContent = 'Alguns itens excedem o estoque. Ajuste as quantidades para prosseguir.';
+    } else {
+      shopNotice.style.display = 'none';
+    }
+  }
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  // Setup máscara telefone simples
+  function setupPhoneMask(){
+    const tel = $('#telefone');
+    tel.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g,'');
+      if (v.length > 11) v = v.slice(0,11);
+      if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/,'($1) $2-$3');
+      else if (v.length > 5) v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/,'($1) $2-$3');
+      else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})/,'($1) $2');
+      e.target.value = v;
+    });
+  }
+
+  // Filtros
+  function setupFilters(){
+    $('#filterName').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      const filtered = produtos.filter(p => p.name.toLowerCase().includes(q));
+      renderProducts(filtered);
+      applyPriceSort();
+    });
+    $('#filterPrice').addEventListener('change', applyPriceSort);
+    $('#resetFilters').addEventListener('click', ()=>{ $('#filterName').value = ''; $('#filterPrice').value = 'all'; renderProducts(produtos); });
+  }
+
+  function applyPriceSort(){
+    const mode = $('#filterPrice').value;
+    if (mode === 'low'){
+      const sorted = produtos.slice().sort((a,b)=>a.price-b.price);
+      renderProducts(sorted);
+    } else if (mode === 'high'){
+      const sorted = produtos.slice().sort((a,b)=>b.price-a.price);
+      renderProducts(sorted);
+    } else {
+      renderProducts(produtos);
+    }
+  }
+
+  // Cupom
+  $('#applyCoupon')?.addEventListener('click', ()=>{
+    const code = $('#coupon').value.trim().toUpperCase();
+    if (!code) { $('#couponMsg').textContent='Insira um código.'; return; }
+    if (cupons[code]){
+      state.appliedCoupon = code;
+      state.discountPercent = cupons[code];
+      $('#couponMsg').textContent = `Cupom aplicado: ${code} — ${cupons[code]}% de desconto.`;
+    } else {
+      state.appliedCoupon = null;
+      state.discountPercent = 0;
+      $('#couponMsg').textContent = 'Cupom inválido.';
+    }
+    calculateTotal();
+  });
+
+  // Resumo do pedido
+  $('#viewSummary').addEventListener('click', ()=>{
+    renderSummary();
+    openSummary();
+  });
+  $('#closeSummary').addEventListener('click', closeSummary);
+
+  function renderSummary(){
+    const listEl = $('#summaryList');
+    listEl.innerHTML = '';
+    let total = 0;
+    produtos.forEach(p => {
+      const q = state.quantities[p.id] || 0;
+      if (q > 0){
+        const item = document.createElement('div');
+        item.style.padding = '8px 0';
+        item.style.borderBottom = '1px solid #f4f4f4';
+        item.innerHTML = `<strong>${p.name}</strong> — ${q} un. × R$ ${formatCurrency(p.price)} = R$ ${formatCurrency(q*p.price)}`;
+        listEl.appendChild(item);
+        total += q*p.price;
+      }
+    });
+    if (listEl.childElementCount === 0){
+      listEl.innerHTML = '<div class="small">Nenhum produto selecionado.</div>';
+    }
+    const discount = state.discountPercent || 0;
+    const discountValue = total * (discount/100);
+    const finalTotal = total - discountValue;
+    $('#summaryTotals').innerHTML = `Total: R$ ${formatCurrency(total)}<br/>Desconto: ${discount}% (R$ ${formatCurrency(discountValue)})<br/><strong>Final: R$ ${formatCurrency(finalTotal)}</strong>`;
+  }
+
+  function openSummary(){
+    $('#summaryModal').style.display = 'flex';
+    $('#summaryModal').setAttribute('aria-hidden','false');
+  }
+  function closeSummary(){
+    $('#summaryModal').style.display = 'none';
+    $('#summaryModal').setAttribute('aria-hidden','true');
+  }
+
+  // Enviar pedido (form submit)
+  $('#pedidoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Validate products selected
+    let hasProducts = false;
+    produtos.forEach(p => {
+      if ((state.quantities[p.id]||0) > 0) hasProducts = true;
+    });
+    if (!hasProducts){
+      alert('Selecione pelo menos um produto antes de enviar o pedido.');
+      return;
+    }
+    // Validate stock again
+    for (const p of produtos){
+      const s = estoque[p.id];
+      const q = state.quantities[p.id] || 0;
+      if (s !== null && q > s){
+        alert(`Quantidade de ${p.name} maior que o estoque (${s}). Ajuste antes de enviar.`);
+        return;
+      }
+    }
+    // Validate open hours
+    const now = new Date();
+    const hour = now.getHours();
+    const open = (horaAbertura <= horaFechamento)
+      ? (hour >= horaAbertura && hour < horaFechamento)
+      : (hour >= horaAbertura || hour < horaFechamento);
+    if (!open){
+      alert(`Estamos fechados. Horário de funcionamento: ${pad(horaAbertura)}h às ${pad(horaFechamento)}h`);
+      return;
+    }
+    // Open confirmation modal to finalize
+    renderSummary();
+    openSummary();
+  });
+
+  // Confirm send from modal
+  $('#confirmSend').addEventListener('click', ()=>{
+    // Build message and open WhatsApp
+    const nome = $('#nome').value.trim();
+    const telefone = $('#telefone').value.trim();
+    const endereco = $('#endereco').value.trim();
+    const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
+    const observacoes = $('#observacoes').value.trim();
+    let message = `*NOVO PEDIDO - MILY ALFAJOR*%0A%0A`;
+    message += `*Cliente:* ${nome}%0A`;
+    message += `*Telefone:* ${telefone}%0A`;
+    message += `*Endereço:* ${endereco}%0A`;
+    message += `*Pagamento:* ${pagamento}%0A`;
+    if (observacoes) message += `*Observações:* ${observacoes}%0A`;
+    message += `%0A*ITENS:*%0A`;
+    let total = 0;
+    produtos.forEach(p => {
+      const q = state.quantities[p.id] || 0;
+      if (q > 0){
+        const sub = q * p.price;
+        total += sub;
+        message += `- ${p.name}: ${q} un. - R$ ${formatCurrency(sub)}%0A`;
+      }
+    });
+    const discount = state.discountPercent || 0;
+    const discountValue = total * (discount/100);
+    const finalTotal = total - discountValue;
+    message += `%0A*TOTAL:* R$ ${formatCurrency(finalTotal)}%0A`;
+    if (state.appliedCoupon) message += `*CUPOM:* ${state.appliedCoupon} (${discount}%)%0A`;
+    const encoded = encodeURIComponent(message);
+    const url = `https://wa.me/${whatsappNumber}?text=${encoded}`;
+    // Update stock if limited
+    for (const p of produtos){
+      const s = estoque[p.id];
+      const q = state.quantities[p.id] || 0;
+      if (s !== null && q > 0){
+        estoque[p.id] = Math.max(0, s - q);
+      }
+      // reset quantity in UI
+      const input = document.querySelector(`.product-quantity[data-id="${p.id}"]`);
+      if (input) input.value = 0;
+      state.quantities[p.id] = 0;
+    }
+    // Close modal then open WhatsApp in new tab
+    closeSummary();
+    calculateTotal();
+    updateStockDisplayAll();
+    window.open(url, '_blank');
+  });
+
+  // Attach listeners generic
+  function setupEventListeners(){
+    // Close modal clicking backdrop
+    $('#summaryModal').addEventListener('click', (e)=>{ if (e.target === $('#summaryModal')) closeSummary(); });
+    // Also attach dynamic quantity listeners after rendering
+  }
+
+  // Register PWA service worker automatically
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').then(reg => {
+        console.log('Service Worker registrado.', reg);
+      }).catch(err => {
+        console.warn('Erro ao registrar service worker:', err);
+      });
+    });
+  }
+
+  // Google Analytics - comente/descomente e insira seu ID quando quiser ativar
+  /*
+  (function(){
+    const GA_ID = 'G-XXXXXXXXXX'; // substitua pelo seu ID
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments)}
+    gtag('js', new Date());
+    gtag('config', GA_ID);
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(s);
+  })();
+  */
+
+  // helpers
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  </script>
+</body>
+</html>
