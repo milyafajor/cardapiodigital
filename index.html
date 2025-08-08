@@ -117,7 +117,7 @@
   </div>
 
   <script>
-// ===== CONFIGURAÇÕES =====
+  // ===== CONFIGURAÇÕES =====
 const horaAbertura = 9; // 09:00
 const horaFechamento = 3; // 03:00 (passa da meia-noite)
 const whatsappNumber = '5524992438194';
@@ -174,7 +174,7 @@ function checkOpenStatus() {
 
   if (!open) {
     closedNotice.style.display = 'block';
-    closedNotice.textContent = `Estamos fechados. Horário: ${pad(horaAbertura)}h às ${pad(horaFechamento)}h`;
+    closedNotice.textContent = `⛔ Estamos fechados. Horário: ${pad(horaAbertura)}h às ${pad(horaFechamento)}h`;
     $$('.btn-enviar').forEach(btn => btn.style.display = 'none');
   } else {
     closedNotice.style.display = 'none';
@@ -289,7 +289,7 @@ function enviarPedido(){
   const nome = $('#nome').value.trim();
   const telefone = $('#telefone').value.trim();
   const endereco = $('#endereco').value.trim();
-  const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
+  const pagamento = document.querySelector('input[name="pagamento"]:checked')?.value || '';
   const observacoes = $('#observacoes').value.trim();
 
   let message = `*📦 NOVO PEDIDO - MILY ALFAJOR*\n`;
@@ -337,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
   calculateTotal();
   checkOpenStatus();
 });
+
 
 
   </script>
