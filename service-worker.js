@@ -1,4 +1,4 @@
-const CACHE_NAME = "mily-cache-v2"; // Troque o número quando quiser forçar update
+const CACHE_NAME = "mily-cache-v3"; // Troque o número quando quiser forçar update
 const URLS_TO_CACHE = [
   "./index.html",
   "./manifest.json",
